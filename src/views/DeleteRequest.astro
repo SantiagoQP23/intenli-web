@@ -1,0 +1,154 @@
+---
+import Base from "@/layouts/Base.astro";
+import { CONTACT_EMAIL, useTranslations, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const api = import.meta.env.PUBLIC_MONEY_API_URL ?? "";
+const messages = {
+  sentText: t("delete.sentText"),
+  errorEmail: t("delete.errorEmail"),
+  errorRate: t("delete.errorRate"),
+  errorNetwork: t("delete.errorNetwork"),
+  send: t("delete.send"),
+  sending: t("delete.sending"),
+};
+const deleted = [t("delete.what1"), t("delete.what2"), t("delete.what3"), t("delete.what4")];
+const kept = [t("delete.kept1"), t("delete.kept2"), t("delete.kept3")];
+const [helpBefore, helpAfter] = t("delete.help").split("{email}");
+---
+
+<Base lang={lang} path="/money/delete-account" title={t("delete.title")} description={t("delete.description")}>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 pt-12 sm:pt-16 flex flex-col gap-10">
+    <header class="flex flex-col gap-3">
+      <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">{t("delete.heading")}</h1>
+      <p class="text-lg text-ink-soft leading-8">{t("delete.lead")}</p>
+    </header>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <section class="rounded-3xl bg-surface-low border border-divider p-6 flex flex-col gap-2">
+        <h2 class="text-lg font-semibold">{t("delete.inAppTitle")}</h2>
+        <p class="text-ink-soft leading-7">{t("delete.inAppText")}</p>
+      </section>
+
+      <section class="rounded-3xl border border-border p-6 flex flex-col gap-4" aria-labelledby="web-title">
+        <div class="flex flex-col gap-2">
+          <h2 id="web-title" class="text-lg font-semibold">{t("delete.webTitle")}</h2>
+          <p class="text-ink-soft leading-7" data-step="form">{t("delete.webText")}</p>
+        </div>
+
+        <form id="request-form" class="flex flex-col gap-3" novalidate data-api={api} data-lang={lang} data-messages={JSON.stringify(messages)}>
+          <label for="email" class="text-sm font-medium">{t("delete.emailLabel")}</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            placeholder={t("delete.emailPlaceholder")}
+            aria-describedby="request-error"
+            class="h-12 rounded-2xl border border-border bg-bg px-4 text-base placeholder:text-muted focus:outline-none focus:border-ink"
+          />
+          <p id="request-error" role="alert" class="text-sm text-error empty:hidden"></p>
+          <button
+            type="submit"
+            class="h-12 rounded-full bg-primary text-on-primary font-semibold hover:opacity-90 disabled:opacity-60"
+            >{t("delete.send")}</button
+          >
+        </form>
+
+        <div id="request-sent" class="hidden flex-col gap-3" role="status" tabindex="-1">
+          <h3 class="font-semibold">{t("delete.sentTitle")}</h3>
+          <p id="request-sent-text" class="text-ink-soft leading-7"></p>
+          <button type="button" id="request-again" class="self-start text-sm font-semibold underline underline-offset-4">{t("delete.again")}</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid gap-8 md:grid-cols-2">
+      <section>
+        <h2 class="text-lg font-semibold">{t("delete.whatTitle")}</h2>
+        <ul class="mt-3 flex flex-col gap-2 text-ink-soft leading-7 list-disc pl-5">
+          {deleted.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+      <section>
+        <h2 class="text-lg font-semibold">{t("delete.keptTitle")}</h2>
+        <ul class="mt-3 flex flex-col gap-2 text-ink-soft leading-7 list-disc pl-5">
+          {kept.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    <p class="text-sm text-muted">
+      {helpBefore}<a class="underline underline-offset-2 text-ink" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>{helpAfter}
+    </p>
+  </div>
+</Base>
+
+<script>
+  const form = document.getElementById("request-form") as HTMLFormElement;
+  const input = form.querySelector("input") as HTMLInputElement;
+  const button = form.querySelector("button") as HTMLButtonElement;
+  const error = document.getElementById("request-error")!;
+  const sent = document.getElementById("request-sent")!;
+  const sentText = document.getElementById("request-sent-text")!;
+  const again = document.getElementById("request-again")!;
+  const intro = document.querySelector('[data-step="form"]') as HTMLElement;
+  const api = form.dataset.api!;
+  const lang = form.dataset.lang!;
+  const m = JSON.parse(form.dataset.messages!) as Record<string, string>;
+
+  const show = (sentState: boolean) => {
+    form.classList.toggle("hidden", sentState);
+    intro.classList.toggle("hidden", sentState);
+    sent.classList.toggle("hidden", !sentState);
+    sent.classList.toggle("flex", sentState);
+  };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    error.textContent = "";
+    const email = input.value.trim();
+    if (!input.checkValidity() || !email) {
+      error.textContent = m.errorEmail;
+      input.focus();
+      return;
+    }
+    button.disabled = true;
+    button.textContent = m.sending;
+    try {
+      const res = await fetch(`${api}/v1/account-deletion/requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale: lang }),
+      });
+      if (res.status === 202) {
+        sentText.textContent = m.sentText.replace("{email}", email);
+        show(true);
+        sent.focus();
+      } else if (res.status === 429) {
+        error.textContent = m.errorRate;
+      } else if (res.status === 400) {
+        error.textContent = m.errorEmail;
+      } else {
+        error.textContent = m.errorNetwork;
+      }
+    } catch {
+      error.textContent = m.errorNetwork;
+    } finally {
+      button.disabled = false;
+      button.textContent = m.send;
+    }
+  });
+
+  again.addEventListener("click", () => {
+    show(false);
+    input.value = "";
+    input.focus();
+  });
+</script>

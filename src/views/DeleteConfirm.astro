@@ -1,0 +1,236 @@
+---
+import Base from "@/layouts/Base.astro";
+import { localePath, useTranslations, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const api = import.meta.env.PUBLIC_MONEY_API_URL ?? "";
+const messages = {
+  DELETE: t("confirm.outcome.DELETE"),
+  LEAVE: t("confirm.outcome.LEAVE"),
+  TRANSFER: t("confirm.outcome.TRANSFER"),
+  archived: t("confirm.archived"),
+  personal: t("confirm.personal"),
+  button: t("confirm.button"),
+  deleting: t("confirm.deleting"),
+  transferred: t("confirm.doneTransferred"),
+};
+const card = "rounded-3xl border border-border p-6 sm:p-8 flex-col gap-4";
+---
+
+<Base lang={lang} path="/money/delete-account/confirm" title={t("confirm.title")} description={t("delete.description")} noindex>
+  <meta slot="head" name="referrer" content="no-referrer" />
+  <div
+    id="confirm"
+    class="mx-auto max-w-2xl px-4 sm:px-6 pt-12 sm:pt-16"
+    data-api={api}
+    data-messages={JSON.stringify(messages)}
+    aria-live="polite"
+  >
+    <p data-state="loading" class="flex text-ink-soft">{t("confirm.loading")}</p>
+
+    <section data-state="ready" class={`hidden ${card}`} aria-labelledby="confirm-title">
+      <h1 id="confirm-title" class="text-3xl font-semibold tracking-tight">{t("confirm.heading")}</h1>
+      <p class="text-ink-soft">{t("confirm.account")}: <strong id="confirm-email" class="text-ink"></strong></p>
+
+      <h2 class="mt-2 font-semibold">{t("confirm.spacesTitle")}</h2>
+      <ul id="confirm-spaces" class="flex flex-col divide-y divide-divider rounded-2xl bg-surface-low border border-divider"></ul>
+
+      <h2 class="mt-2 font-semibold">{t("confirm.alsoTitle")}</h2>
+      <ul class="flex flex-col gap-1.5 text-ink-soft leading-7 list-disc pl-5">
+        <li>{t("confirm.also1")}</li>
+        <li>{t("confirm.also2")}</li>
+        <li>{t("confirm.also3")}</li>
+      </ul>
+
+      <form id="confirm-form" class="mt-2 flex flex-col gap-4">
+        <label class="flex items-start gap-3 rounded-2xl bg-error-soft p-4 cursor-pointer">
+          <input id="confirm-check" type="checkbox" class="mt-1 size-5 accent-[var(--c-error)]" />
+          <span class="font-medium">{t("confirm.check")}</span>
+        </label>
+        <p id="confirm-error" role="alert" class="text-sm text-error empty:hidden"></p>
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <a
+            href={localePath(lang, "/money")}
+            id="confirm-cancel"
+            class="h-12 px-6 rounded-full border border-border font-semibold grid place-items-center hover:bg-surface-low"
+            >{t("confirm.cancel")}</a
+          >
+          <button
+            id="confirm-button"
+            type="submit"
+            disabled
+            class="h-12 px-6 rounded-full bg-error text-white font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >{t("confirm.button")}</button
+          >
+        </div>
+        <p class="text-sm text-muted sm:text-right">{t("confirm.cancelHint")}</p>
+      </form>
+    </section>
+
+    <section data-state="done" class={`hidden ${card}`} tabindex="-1">
+      <h1 class="text-3xl font-semibold tracking-tight">{t("confirm.doneTitle")}</h1>
+      <p class="text-ink-soft leading-7">{t("confirm.doneText")}</p>
+      <p class="text-ink-soft leading-7">{t("confirm.doneKept")}</p>
+      <p id="done-transferred" class="text-ink-soft leading-7 empty:hidden"></p>
+    </section>
+
+    <section data-state="invalid" class={`hidden ${card}`}>
+      <h1 class="text-3xl font-semibold tracking-tight">{t("confirm.invalidTitle")}</h1>
+      <p class="text-ink-soft leading-7">{t("confirm.invalidText")}</p>
+      <a
+        href={localePath(lang, "/money/delete-account")}
+        class="self-start h-12 px-6 rounded-full bg-primary text-on-primary font-semibold grid place-items-center">{t("confirm.newLink")}</a
+      >
+    </section>
+
+    <section data-state="error" class={`hidden ${card}`}>
+      <p class="text-ink-soft leading-7">{t("confirm.error")}</p>
+      <button id="retry" type="button" class="self-start h-12 px-6 rounded-full border border-border font-semibold">{t("confirm.retry")}</button>
+    </section>
+  </div>
+</Base>
+
+<script>
+  type Space = {
+    id: string;
+    name: string;
+    type: string;
+    archived: boolean;
+    outcome: "DELETE" | "LEAVE" | "TRANSFER";
+    new_owner: { name: string; email: string } | null;
+  };
+
+  const root = document.getElementById("confirm")!;
+  const api = root.dataset.api!;
+  const m = JSON.parse(root.dataset.messages!) as Record<string, string>;
+  const form = document.getElementById("confirm-form") as HTMLFormElement;
+  const check = document.getElementById("confirm-check") as HTMLInputElement;
+  const button = document.getElementById("confirm-button") as HTMLButtonElement;
+  const cancel = document.getElementById("confirm-cancel")!;
+  const error = document.getElementById("confirm-error")!;
+  const KEY = "intenli-money-deletion-token";
+
+  // Keep the token out of the address bar (and so out of history and
+  // screenshots), but survive a reload of this tab.
+  const fromUrl = new URLSearchParams(location.search).get("token");
+  let token = fromUrl ?? "";
+  try {
+    if (fromUrl) sessionStorage.setItem(KEY, fromUrl);
+    else token = sessionStorage.getItem(KEY) ?? "";
+  } catch {
+    /* storage blocked: the token in memory is enough */
+  }
+  if (fromUrl) history.replaceState(null, "", location.pathname);
+
+  const show = (state: string) => {
+    root.querySelectorAll<HTMLElement>("[data-state]").forEach((el) => {
+      const on = el.dataset.state === state;
+      el.classList.toggle("hidden", !on);
+      el.classList.toggle("flex", on);
+    });
+  };
+
+  const forget = () => {
+    try {
+      sessionStorage.removeItem(KEY);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const ownerName = (s: Space) => s.new_owner?.name || s.new_owner?.email || "";
+
+  const renderSpaces = (spaces: Space[]) => {
+    const list = document.getElementById("confirm-spaces")!;
+    list.replaceChildren(
+      ...spaces.map((s) => {
+        const li = document.createElement("li");
+        li.className = "flex flex-col gap-1 p-4";
+        const title = document.createElement("div");
+        title.className = "flex flex-wrap items-center gap-2";
+        const name = document.createElement("span");
+        name.className = "font-semibold";
+        name.textContent = s.name;
+        title.append(name);
+        const tags = [s.type === "PERSONAL" ? m.personal : "", s.archived ? m.archived : ""].filter(Boolean);
+        for (const tag of tags) {
+          const badge = document.createElement("span");
+          badge.className = "text-xs rounded-full bg-surface px-2 py-0.5 text-muted";
+          badge.textContent = tag;
+          title.append(badge);
+        }
+        const outcome = document.createElement("span");
+        outcome.className = s.outcome === "DELETE" ? "text-sm text-error" : "text-sm text-ink-soft";
+        outcome.textContent = m[s.outcome].replace("{name}", ownerName(s));
+        li.append(title, outcome);
+        return li;
+      }),
+    );
+  };
+
+  const post = (path: string) =>
+    fetch(`${api}/v1/account-deletion/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+  async function load() {
+    show("loading");
+    if (!token) return show("invalid");
+    try {
+      const res = await post("preview");
+      if (res.status === 410 || res.status === 400) {
+        forget();
+        return show("invalid");
+      }
+      if (!res.ok) return show("error");
+      const data = (await res.json()) as { email: string; spaces: Space[] };
+      document.getElementById("confirm-email")!.textContent = data.email;
+      renderSpaces(data.spaces);
+      show("ready");
+    } catch {
+      show("error");
+    }
+  }
+
+  check.addEventListener("change", () => {
+    button.disabled = !check.checked;
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!check.checked) return;
+    error.textContent = "";
+    button.disabled = true;
+    cancel.classList.add("pointer-events-none", "opacity-40");
+    button.textContent = m.deleting;
+    try {
+      const res = await post("confirm");
+      if (res.status === 410) {
+        forget();
+        return show("invalid");
+      }
+      if (!res.ok) throw new Error(String(res.status));
+      const data = (await res.json()) as { spaces: Space[] };
+      forget();
+      const moved = data.spaces.filter((s) => s.outcome === "TRANSFER").map((s) => `${s.name} → ${ownerName(s)}`);
+      if (moved.length) document.getElementById("done-transferred")!.textContent = m.transferred.replace("{list}", moved.join(", "));
+      show("done");
+      window.scrollTo(0, 0);
+      (root.querySelector('[data-state="done"]') as HTMLElement).focus({ preventScroll: true });
+    } catch {
+      error.textContent = document.querySelector('[data-state="error"] p')!.textContent;
+      button.disabled = !check.checked;
+      button.textContent = m.button;
+      cancel.classList.remove("pointer-events-none", "opacity-40");
+    }
+  });
+
+  document.getElementById("retry")!.addEventListener("click", load);
+  load();
+</script>

@@ -1,0 +1,122 @@
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+
+/*
+ * Intenli "paper and ink" (from @intenli/ui DESIGN.md). Colors are roles, set
+ * as CSS variables so dark mode only swaps the variables.
+ */
+:root {
+  color-scheme: light dark;
+  --c-bg: #ffffff;
+  --c-surface: #f2f2f2;
+  --c-surface-low: #f7f7f7;
+  --c-paper: #f4efe6;
+  --c-ink: #1c1b19;
+  --c-ink-soft: #4a4a4a;
+  --c-muted: #6b6b6b;
+  --c-border: #dcdcdc;
+  --c-divider: #eeeeee;
+  --c-primary: #1c1b19;
+  --c-on-primary: #ffffff;
+  --c-coin: #dce7ee;
+  --c-on-coin: #1c1b19;
+  --c-error: #dc2626;
+  --c-error-soft: #fdecec;
+  --c-success: #15803d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: #141311;
+    --c-surface: #1e1d1a;
+    --c-surface-low: #191816;
+    --c-paper: #1e1d1a;
+    --c-ink: #ede8df;
+    --c-ink-soft: #c9c4bb;
+    --c-muted: #a39e95;
+    --c-border: #3a3834;
+    --c-divider: #2a2925;
+    --c-primary: #ede8df;
+    --c-on-primary: #141311;
+    --c-coin: #8fafc4;
+    --c-on-coin: #141311;
+    --c-error: #f87171;
+    --c-error-soft: #3a1d1d;
+    --c-success: #4ade80;
+  }
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-low: var(--c-surface-low);
+  --color-paper: var(--c-paper);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-muted: var(--c-muted);
+  --color-border: var(--c-border);
+  --color-divider: var(--c-divider);
+  --color-primary: var(--c-primary);
+  --color-on-primary: var(--c-on-primary);
+  --color-coin: var(--c-coin);
+  --color-on-coin: var(--c-on-coin);
+  --color-error: var(--c-error);
+  --color-error-soft: var(--c-error-soft);
+  --color-success: var(--c-success);
+}
+
+html {
+  background: var(--c-bg);
+  color: var(--c-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-bg text-ink font-sans antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Long-form legal text. */
+.prose-legal {
+  @apply text-ink-soft leading-7;
+}
+.prose-legal h2 {
+  @apply text-ink text-xl font-semibold mt-12 mb-3 scroll-mt-24;
+}
+.prose-legal h3 {
+  @apply text-ink text-base font-semibold mt-8 mb-2;
+}
+.prose-legal p,
+.prose-legal ul,
+.prose-legal ol,
+.prose-legal table {
+  @apply mb-4;
+}
+.prose-legal ul {
+  @apply list-disc pl-6 space-y-1;
+}
+.prose-legal ol {
+  @apply list-decimal pl-6 space-y-1;
+}
+.prose-legal a {
+  @apply text-ink underline underline-offset-2;
+}
+.prose-legal strong {
+  @apply text-ink font-semibold;
+}
+.prose-legal table {
+  @apply w-full text-sm border-collapse block overflow-x-auto;
+}
+.prose-legal th,
+.prose-legal td {
+  @apply border-b border-divider py-2 pr-4 text-left align-top;
+}
+.prose-legal th {
+  @apply text-ink font-semibold;
+}

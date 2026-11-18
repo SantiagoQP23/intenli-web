@@ -1,0 +1,28 @@
+---
+import { useTranslations, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const play = import.meta.env.PUBLIC_PLAY_TESTING_URL as string | undefined;
+---
+
+<div class="flex flex-wrap items-center gap-3">
+  {
+    play ? (
+      <a
+        href={play}
+        rel="noopener"
+        class="inline-flex flex-col items-start rounded-full bg-primary text-on-primary px-6 py-3 hover:opacity-90"
+      >
+        <span class="font-semibold">{t("money.play")}</span>
+        <span class="text-xs opacity-75">{t("money.playHint")}</span>
+      </a>
+    ) : (
+      <span class="inline-flex rounded-full bg-primary text-on-primary px-6 py-3 font-semibold">{t("money.soon")}</span>
+    )
+  }
+  {play && <span class="text-sm text-muted">{t("money.appStore")}</span>}
+</div>

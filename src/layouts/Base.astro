@@ -1,0 +1,98 @@
+---
+import "@/styles/global.css";
+import Logo from "@/components/Logo.astro";
+import { CONTACT_EMAIL, localePath, otherLang, useTranslations, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+  /** Path without the language prefix, like "/money/privacy". */
+  path: string;
+  title: string;
+  description: string;
+  /** Section the header brands: the company or Intenli Money. */
+  product?: "intenli" | "money";
+  noindex?: boolean;
+}
+
+const { lang, path, title, description, product = "money", noindex = false } = Astro.props;
+const t = useTranslations(lang);
+const other = otherLang(lang);
+const site = Astro.site!;
+const canonical = new URL(localePath(lang, path), site).href;
+const alternates = (["es", "en"] as const).map((l) => ({ lang: l, href: new URL(localePath(l, path), site).href }));
+const brandHref = product === "money" ? localePath(lang, "/money") : localePath(lang, "/");
+const ogImage = new URL("/brand/og.png", site).href;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {alternates.map((a) => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={alternates[0].href} />
+    <link rel="icon" type="image/png" href="/brand/favicon.png" />
+    <link rel="apple-touch-icon" href="/brand/icon.png" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={product === "money" ? "Intenli Money" : "Intenli"} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={lang === "es" ? "es_EC" : "en_US"} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <slot name="head" />
+  </head>
+  <body class="min-h-dvh flex flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded-full"
+      >{t("nav.skip")}</a
+    >
+    <header class="sticky top-0 z-40 bg-bg/90 backdrop-blur border-b border-divider">
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <a href={brandHref} class="flex items-center gap-2.5 font-semibold text-lg tracking-tight">
+          <Logo variant="mark" class="size-9" />
+          <span>{product === "money" ? "Intenli Money" : "Intenli"}</span>
+        </a>
+        <a
+          href={localePath(other, path)}
+          hreflang={other}
+          lang={other}
+          aria-label={t("nav.languageLabel")}
+          class="text-sm font-medium text-ink-soft hover:text-ink rounded-full border border-border px-3 py-1.5"
+          >{t("nav.language")}</a
+        >
+      </div>
+    </header>
+
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-divider mt-20">
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 py-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex flex-col gap-1">
+          <a href={localePath(lang, "/")} class="font-semibold">Intenli</a>
+          <p class="text-sm text-muted">{t("site.tagline")}</p>
+        </div>
+        <nav aria-label="Intenli Money" class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:flex sm:flex-col sm:gap-2">
+          <span class="col-span-2 font-semibold text-ink">Intenli Money</span>
+          <a class="text-ink-soft hover:text-ink" href={localePath(lang, "/money/privacy")}>{t("footer.privacy")}</a>
+          <a class="text-ink-soft hover:text-ink" href={localePath(lang, "/money/terms")}>{t("footer.terms")}</a>
+          <a class="text-ink-soft hover:text-ink" href={localePath(lang, "/money/delete-account")}>{t("footer.delete")}</a>
+          <a class="text-ink-soft hover:text-ink" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        </nav>
+      </div>
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 pb-10 text-xs text-muted">
+        © {new Date().getFullYear()} {t("footer.rights")}
+      </div>
+    </footer>
+  </body>
+</html>

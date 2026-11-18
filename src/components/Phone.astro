@@ -1,0 +1,22 @@
+---
+// An app screenshot in a simple phone frame.
+interface Props {
+  src: string;
+  alt: string;
+  class?: string;
+  eager?: boolean;
+}
+const { src, alt, class: className = "", eager = false } = Astro.props;
+---
+
+<div class={`rounded-[2.5rem] border border-border bg-surface p-2 shadow-[0_24px_60px_-28px_rgba(28,27,25,0.35)] ${className}`}>
+  <img
+    src={src}
+    alt={alt}
+    width="390"
+    height="844"
+    loading={eager ? "eager" : "lazy"}
+    decoding="async"
+    class="block w-full h-auto rounded-[2rem] bg-bg"
+  />
+</div>

@@ -1,0 +1,96 @@
+---
+import Base from "@/layouts/Base.astro";
+import Logo from "@/components/Logo.astro";
+import Phone from "@/components/Phone.astro";
+import StoreButtons from "@/components/StoreButtons.astro";
+import { localePath, useTranslations, type Lang } from "@/i18n/ui";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const shot = (name: string) => `/screens/${lang}/${name}.png`;
+
+const pillars = [
+  { title: t("money.p1.title"), text: t("money.p1.text") },
+  { title: t("money.p2.title"), text: t("money.p2.text") },
+  { title: t("money.p3.title"), text: t("money.p3.text") },
+];
+const features = [
+  { title: t("money.f2.title"), text: t("money.f2.text"), src: shot("accounts"), alt: t("money.shotAlt.accounts") },
+  { title: t("money.f3.title"), text: t("money.f3.text"), src: shot("debts"), alt: t("money.shotAlt.debts") },
+  { title: t("money.f4.title"), text: t("money.f4.text"), src: shot("activity"), alt: t("money.shotAlt.activity") },
+];
+---
+
+<Base lang={lang} path="/money" title={t("money.title")} description={t("money.description")}>
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 pt-12 sm:pt-20 grid gap-12 md:grid-cols-[1.15fr_1fr] md:items-center">
+    <div class="flex flex-col gap-6">
+      <Logo class="size-24 -ml-2" />
+      <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.1] text-balance">{t("money.heading")}</h1>
+      <p class="text-lg text-ink-soft leading-8 max-w-xl">{t("money.lead")}</p>
+      <StoreButtons lang={lang} />
+    </div>
+    <Phone src={shot("home")} alt={t("money.shotAlt.home")} class="mx-auto w-full max-w-[300px]" eager />
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 mt-24" aria-labelledby="pillars">
+    <h2 id="pillars" class="text-2xl sm:text-3xl font-semibold tracking-tight">{t("money.pillarsTitle")}</h2>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      {
+        pillars.map((p, i) => (
+          <div class="rounded-3xl bg-surface-low border border-divider p-6 flex flex-col gap-3">
+            <span class="size-9 rounded-full bg-coin text-on-coin grid place-items-center text-sm font-semibold">{i + 1}</span>
+            <h3 class="text-lg font-semibold">{p.title}</h3>
+            <p class="text-ink-soft leading-7">{p.text}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 mt-24" aria-labelledby="features">
+    <h2 id="features" class="text-2xl sm:text-3xl font-semibold tracking-tight">{t("money.featuresTitle")}</h2>
+    <div class="mt-10 flex flex-col gap-20">
+      {
+        features.map((f, i) => (
+          <div class="grid gap-8 md:grid-cols-2 md:items-center">
+            <div class={`flex flex-col gap-3 ${i % 2 ? "md:order-2" : ""}`}>
+              <h3 class="text-2xl font-semibold tracking-tight">{f.title}</h3>
+              <p class="text-lg text-ink-soft leading-8 max-w-md">{f.text}</p>
+            </div>
+            <Phone src={f.src} alt={f.alt} class="mx-auto w-full max-w-[280px]" />
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 mt-24 grid gap-4 md:grid-cols-2">
+    <div class="rounded-3xl bg-surface-low border border-divider p-6 flex flex-col gap-2">
+      <h2 class="text-lg font-semibold">{t("money.offlineTitle")}</h2>
+      <p class="text-ink-soft leading-7">{t("money.offlineText")}</p>
+    </div>
+    <div class="rounded-3xl bg-surface-low border border-divider p-6 flex flex-col gap-2">
+      <h2 class="text-lg font-semibold">{t("money.langTitle")}</h2>
+      <p class="text-ink-soft leading-7">{t("money.langText")}</p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 mt-24">
+    <div class="rounded-3xl bg-coin text-on-coin p-8 sm:p-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-2 max-w-xl">
+        <h2 class="text-2xl font-semibold tracking-tight">{t("money.privacyTitle")}</h2>
+        <p class="leading-7 opacity-85">{t("money.privacyText")}</p>
+      </div>
+      <a href={localePath(lang, "/money/privacy")} class="shrink-0 font-semibold underline underline-offset-4">{t("money.privacyLink")}</a>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 sm:px-6 mt-24 flex flex-col items-center text-center gap-6">
+    <Logo variant="mark" class="size-16" />
+    <h2 class="text-3xl font-semibold tracking-tight text-balance max-w-xl">{t("money.heading")}</h2>
+    <StoreButtons lang={lang} />
+  </section>
+</Base>
