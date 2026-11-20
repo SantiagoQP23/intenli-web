@@ -21,6 +21,7 @@ The Intenli company website. Today it holds the Intenli Money pages that the app
 - `src/views/`: one component per page, used by the thin files in `src/pages/` (Spanish) and `src/pages/en/` (English).
 - `src/content/legal/{es,en}/{privacy,terms}.md`: the legal texts. Change the `updated` date in the front matter when you edit them.
 - `public/screens/{es,en}/`: app screenshots for the landing page.
+- `store/`: Google Play listing images (icon, feature graphic, screenshots) and the script that makes them. See [store/README.md](store/README.md).
 
 ## Run
 
